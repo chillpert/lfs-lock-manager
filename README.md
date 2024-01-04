@@ -3,6 +3,8 @@
 [![PyInstaller](https://github.com/chillpert/lfs-lock-manager/actions/workflows/build.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/build.yml)
 [![Pylint](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml)
 
+⚠️  This project is still experimental. Use it at your own risk.
+
 This application can help you and your team to manage your LFS file locks, on both Windows and Linux. It is written in Python 3.12 with PyQt5 and
 built using PyInstaller, so you do not need Python to be installed on your system.
 
