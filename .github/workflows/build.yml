@@ -1,0 +1,125 @@
+name: PyInstaller
+
+on:
+  push:
+    tags:
+      - '*'
+#    branches:
+#      - main
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.12
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run PyInstaller
+        run: |
+          pyinstaller LfsLockManager.spec
+      - name: Install zip
+        run: |
+          Invoke-WebRequest -Uri "https://www.7-zip.org/a/7z1900-x64.exe" -OutFile "$env:TEMP\7z1900-x64.exe"
+          Start-Process -Wait -FilePath "$env:TEMP\7z1900-x64.exe" -ArgumentList '/S', '/D=C:\7-Zip'
+          Remove-Item "$env:TEMP\7z1900-x64.exe"
+          $env:Path = "C:\7-Zip;$env:Path"
+      - name: Create archive
+        run: |
+          mv dist/LfsLockManager.exe LfsLockManager.exe
+          7z.exe a -r LfsLockManager_Windows.zip LfsLockManager.exe settings.ini
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-artifact
+          path: LfsLockManager_Windows.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.12
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run PyInstaller
+        run: |
+          pyinstaller LfsLockManager.spec
+      - name: Create archive
+        run: |
+          mv dist/LfsLockManager LfsLockManager
+          zip -r LfsLockManager_Linux.zip LfsLockManager settings.ini
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-artifact
+          path: LfsLockManager_Linux.zip
+
+  create-release:
+    needs: [ build-windows, build-linux ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        #      - name: Retrieve Commit Hash
+        #        id: commit_hash
+
+        #        run: echo "::set-output name=hash::$(git rev-parse --short=7 HEAD)"
+        #        run: echo "::set-output name=hash::${{ github.sha }}"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            Release created from tag: ${{ github.ref }}
+          #          tag_name: v1.0.0-${{ steps.commit_hash.outputs.hash }}
+          #          release_name: Release v1.0.0-${{ steps.commit_hash.outputs.hash }}
+          draft: false
+          prerelease: false
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-artifact
+          path: ./artifacts
+      - name: Upload Linux Executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/LfsLockManager_Linux.zip
+          asset_name: LfsLockManager_Linux.zip
+          asset_content_type: application/zip
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-artifact
+          path: ./artifacts
+      - name: Upload Windows Executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/LfsLockManager_Windows.zip
+          asset_name: LfsLockManager_Windows.zip
+          asset_content_type: application/zip

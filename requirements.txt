@@ -1,0 +1,5 @@
+pyinstaller
+pyqt5
+pyqtdarktheme
+darkdetect
+pyperclip
