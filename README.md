@@ -47,6 +47,7 @@ updated version of `settings.ini` to `./dist`.
 
 ## TODO
 
+- [ ] Add support for removing orphaned locks
 - [ ] Reduce overhead for (un)locking operations
 - [ ] Clean up codebase (I am a beginner with Python)
 - [ ] Remove Git Bash for Windows requirement
