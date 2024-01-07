@@ -185,14 +185,24 @@ class Utility:
 
     @staticmethod
     def get_project_root_directory():
-        # full_path = Utility.resource_path(os.getcwd().replace("\\", "/") + "/" + Settings.project_root_directory +
-        # "/")
         full_path = os.path.join(os.getcwd(), Settings.project_root_directory)
-        return os.path.join(full_path, '')
+        return Utility.format_path(os.path.join(full_path, ''))
 
     class Platform(Enum):
         Windows = 1
         Linux = 2
+
+    @staticmethod
+    def format_path(path: str):
+        platform = Utility.get_platform()
+        if platform == Utility.Platform.Windows:
+            path.replace("/", "\\")
+        elif platform ==Utility.Platform.Linux:
+            path.replace("\\", "/")
+        else:
+            raise PlatformError()
+
+        return path
 
     @staticmethod
     def get_platform():
