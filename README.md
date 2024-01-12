@@ -2,6 +2,7 @@
 
 [![PyInstaller](https://github.com/chillpert/lfs-lock-manager/actions/workflows/build.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/build.yml)
 [![Pylint](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml)
+![](https://shields.io/github/license/chillpert/lfs-lock-manager)
 
 ⚠️  This project is still experimental. Use it at your own risk.
 
@@ -37,6 +38,10 @@ On Windows, you currently still need GitBash for Windows which usually ships wit
 
 Run `pyinstaller LfsLockManager.spec` to create your executable. By default, it will be placed in `./dist`. Copy an
 updated version of `settings.ini` to `./dist`.
+
+## GitHub-Actions
+
+There is a GitHub action for downloading the latest release of this repository automatically. This action will skip the download if there is no new version available. The action creates a PR which you can then merge yourself after verifying the changes. Feel free to optimize it for your own workflow. You can find it [here](https://github.com/chillpert/lfs-lock-manager-deploy-demo).
 
 ## Credits
 
