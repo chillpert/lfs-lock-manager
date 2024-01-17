@@ -91,35 +91,6 @@ class LockingWidgetBase(QWidget):
         # Wrap paths in quotes
         modified_list = ['"' + s + '"' for s in file_list]
 
-        # Filter all non-local files. These are locks for files that do not exist in the current working copy
-        if not should_lock:
-            non_local_files = []
-            local_files = []
-
-            for file in modified_list:
-                lock_data = LfsLockParser.get_lock_data_of_file(file)
-                if lock_data is not None:
-                    if not lock_data.is_local_file:
-                        # print("Added '%s' as non-local file" % file)
-                        non_local_files.append(file)
-                    else:
-                        # print("Added '%s' as local file" % file)
-                        local_files.append(file)
-                else:
-                    raise Exception("Could not find lock data for file '%s'" % file)
-
-            if len(non_local_files) > 0:
-                modified_list.clear()
-                modified_list = local_files
-
-                # print("All non-local files: ")
-                # print(non_local_files)
-
-        if len(modified_list) == 0:
-            return False
-
-        # @TODO: Add non-owning locks to separate list to unlock with --force flag (only for admins)
-        # And only if we are performing an unlocking operation
         if not should_lock:
             non_owned_files = []
             owned_files = []
