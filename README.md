@@ -55,6 +55,7 @@ There is a GitHub action for downloading the latest release of this repository a
 - [ ] Reduce overhead for (un)locking operations
 - [ ] Clean up codebase (I am a beginner with Python)
 - [ ] Remove Git Bash for Windows requirement
+- [ ] Use IDs instead of relative paths to be more efficient with command size limitations
 - [ ] Bug: Selection sometimes persists after certain actions
 - [ ] Bug: After force unlocking another user's locks, the app switches to own locks again
 - [ ] Bug: The current selection gets wiped when filtering using a string that does not match anything in the file tree
