@@ -28,7 +28,8 @@ class Utility:
         try:
             # Execute the command in a subprocess
             split_command = command.split()
-            process = subprocess.Popen(split_command, cwd=root, stdout=subprocess.PIPE)
+            print("Command to run: " + command + " in cwd: " + root)
+            process = subprocess.Popen(split_command, cwd=root, stdout=subprocess.PIPE, shell=True)
 
             # Wait for the process to finish and capture the output
             stdout, stderr = process.communicate()
@@ -159,7 +160,7 @@ class Utility:
                 # Verify executable for Windows
                 if platform == Utility.Platform.Windows:
                     if os.path.isfile(project_root + custom_git_lfs_path + ".exe"):
-                        Utility.get_git_lfs_path.git_lfs_path = custom_git_lfs_path
+                        Utility.get_git_lfs_path.git_lfs_path = custom_git_lfs_path + ".exe"
                 # Verify executable for Linux
                 elif platform == Utility.Platform.Linux:
                     if os.path.isfile(project_root + custom_git_lfs_path):
@@ -186,7 +187,9 @@ class Utility:
     @staticmethod
     def get_project_root_directory():
         full_path = os.path.join(os.getcwd(), Settings.project_root_directory)
-        return Utility.format_path(os.path.join(full_path, ''))
+        full_path = os.path.normpath(full_path)
+        full_path = os.path.join(full_path, '')
+        return full_path
 
     class Platform(Enum):
         Windows = 1

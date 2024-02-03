@@ -76,7 +76,7 @@ class LockingWidgetBase(QWidget):
                 Utility.get_project_root_directory() + git_lfs_path):
             print(
                 "Using custom git LFS at '%s'" % (Utility.get_project_root_directory() + Settings.custom_git_lfs_path))
-            git_command += Settings.custom_git_lfs_path
+            git_command += git_lfs_path
         # Use default
         else:
             git_command += "git lfs"
