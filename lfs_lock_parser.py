@@ -54,12 +54,13 @@ class LfsLockParser:
 
     @staticmethod
     def _notify_subscribers():
-        print("Notifying subscribers %i" % len(LfsLockParser.subscribers))
         # Only notify if we actually parsed any data successfully
         if LfsLockParser.has_parsed_once:
             print("Notifying %i subscribers." % len(LfsLockParser.subscribers))
             for subscriber in LfsLockParser.subscribers:
                 subscriber.on_lock_data_update()
+        else:
+            print("Failed to notify %i subscribers because there is no valid data.")
 
     @staticmethod
     def parse_locks_async():
