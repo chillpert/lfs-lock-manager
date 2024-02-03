@@ -53,6 +53,7 @@ There is a GitHub action for downloading the latest release of this repository a
 ## TODO
 
 - [ ] Reduce overhead for (un)locking operations
+- [ ] Simplify handling of paths and command execution (running in shell, '/' vs '\\', etc.)
 - [ ] Clean up codebase (I am a beginner with Python)
 - [ ] Remove Git Bash for Windows requirement
 - [ ] Use IDs instead of relative paths to be more efficient with command size limitations
