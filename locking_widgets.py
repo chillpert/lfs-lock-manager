@@ -63,23 +63,7 @@ class LockingWidgetBase(QWidget):
         :param should_lock: If true, the locking operation will be lfs lock. Otherwise, lfs unlock.
         :return: Return true if a locking operation was performed (either lock or unlock)
         """
-        git_command = ""
-
-        platform = Utility.get_platform()
-        if platform == Utility.Platform.Windows:
-            # We need to run this command in Git Bash for windows
-            git_command += "\"%PROGRAMFILES%\\Git\\bin\\sh.exe\" -c '"
-
-        git_lfs_path = Utility.get_git_lfs_path()
-        # Try to use custom git LFS executable if specified
-        if len(git_lfs_path) > 0 and os.path.isfile(
-                Utility.get_project_root_directory() + git_lfs_path):
-            print(
-                "Using custom git LFS at '%s'" % (Utility.get_project_root_directory() + Settings.custom_git_lfs_path))
-            git_command += git_lfs_path
-        # Use default
-        else:
-            git_command += "git lfs"
+        git_command = Utility.get_git_lfs_path()
 
         if should_lock:
             git_command += " lock "
@@ -88,15 +72,12 @@ class LockingWidgetBase(QWidget):
 
         project_root = Utility.get_project_root_directory()
 
-        # Wrap paths in quotes
-        modified_list = ['"' + s + '"' for s in file_list]
-
         if not should_lock:
             non_owned_files = []
             owned_files = []
 
             if Utility.is_git_user_admin():
-                for file in modified_list:
+                for file in file_list:
                     # We only need to force unlock non-owning file locks
                     file_owner = LfsLockParser.get_lock_owner_of_file(file)
                     if file_owner != Utility.get_git_user():
@@ -107,72 +88,21 @@ class LockingWidgetBase(QWidget):
                         owned_files.append(file)
 
                 git_admin_command = git_command + "--force "
-                admin_commands = LockingWidgetBase._generate_unlock_command_chunks(git_admin_command, non_owned_files)
-                for admin_command in admin_commands:
-                    print("Executing admin command (%i): %s" % (len(admin_command), admin_command))
-                    process = subprocess.Popen(admin_command, stdout=subprocess.PIPE,
-                                               shell=True, cwd=project_root)
-                    process.communicate()
+                admin_command = git_admin_command.split() + file_list
+                print("Executing admin command (%i): %s" % (len(admin_command), admin_command))
+                Utility.run_command(admin_command, project_root)
 
                 # Filter all non-owning files from the file list
-                # file_list = [file for file in file_list if file not in non_owned_files]
                 if len(non_owned_files) > 0:
-                    modified_list.clear()
-                    modified_list = owned_files
+                    file_list.clear()
+                    file_list = owned_files
 
         # Proceed with the remaining locks
-        commands = LockingWidgetBase._generate_unlock_command_chunks(git_command, modified_list)
-
-        for command in commands:
-            print("Executing command (%i): %s" % (len(command), command))
-            # @TODO: Do not use shell
-            # @NOTE: We can also pass a list of strings instead of one long string
-            process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                       shell=True, cwd=project_root)
-            process.communicate()
-
-        # print("Finished locking operation from inside")
+        command = git_command.split() + file_list
+        print("Executing command (%i): %s" % (len(command), command))
+        Utility.run_command(command, project_root)
 
         return True
-
-    @staticmethod
-    def _generate_unlock_command_chunks(git_command: str, file_list: []):
-        if len(file_list) == 0:
-            return []
-
-        commands = []
-        current_command = git_command
-
-        platform = Utility.get_platform()
-
-        for file in file_list:
-            if not isinstance(file, str):
-                raise TypeError(
-                    "This variable should be a string!!! Instead we are iterating over '%s' and the item's type is '%s'"
-                    % (type(file_list), type(file)))
-
-            # +1 for whitespace
-            new_command_length = len(current_command) + len(file) + 1
-
-            if new_command_length < Settings.max_command_length:
-                current_command += file + " "
-            else:
-                print("CREATED NEW CHUNK (length: %i)" % len(current_command))
-
-                if platform == Utility.Platform.Windows:
-                    current_command += "'"
-
-                commands.append(current_command)
-                current_command = git_command
-
-        # Append the last command
-        if current_command != git_command and current_command not in commands:
-            if platform == Utility.Platform.Windows:
-                current_command += "'"
-
-            commands.append(current_command)
-
-        return commands
 
     @abstractmethod
     def on_lock_data_update(self):

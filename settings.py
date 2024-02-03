@@ -8,7 +8,6 @@ class Settings:
     git_admin_users = []
     custom_git_lfs_path = "git lfs"
     default_mode = "Unlocking Mode"
-    max_command_length = 8192
     lock_mode_file_filter = r"Content/"
 
     @classmethod
@@ -27,5 +26,4 @@ class Settings:
         cls.git_admin_users = [user.strip() for user in users_str.split(',')]
         cls.custom_git_lfs_path = config.get('Settings', 'customGitLfsExecutable')
         cls.default_mode = config.get('Settings', 'defaultMode')
-        cls.max_command_length = config.getint('Settings', 'maxCommandLength')
         cls.lock_mode_file_filter = config.get('Settings', 'lockModeFileFilter')

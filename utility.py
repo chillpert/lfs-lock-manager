@@ -21,39 +21,46 @@ class GitLfsExecutableError(Exception):
 
 class Utility:
     @staticmethod
-    def run_command(command, directory):
+    def run_command(command: list, directory, print_output=False):
+        # If not root directory was specified, we will default to the Git project's root
         root_directory = Utility.get_project_root_directory()
         root = root_directory if directory == "" else directory
 
         try:
-            # Execute the command in a subprocess
-            split_command = command.split()
-            print("Command to run: " + command + " in cwd: " + root)
-            process = subprocess.Popen(split_command, cwd=root, stdout=subprocess.PIPE, shell=True)
+            print("Command to run: " + str(command) + " in cwd: " + root)
+
+            env = os.environ.copy()
+            env['GIT_TERMINAL_PROMPT'] = '0'
+            env['GIT_TRACE'] = '1'
+            env['GIT_CURL_VERBOSE'] = '1'
+
+            process = subprocess.Popen(command, env=env, cwd=root, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
 
             # Wait for the process to finish and capture the output
             stdout, stderr = process.communicate()
 
             # Check the return code to detect errors
             return_code = process.returncode
+
+            # Command executed successfully
             if return_code == 0:
-                # Command executed successfully
-                # print("Command output:")
-                # print(stdout.decode())
+                if print_output:
+                    print("Command output:\n{%s}" % stdout.decode())
+
                 return stdout.decode('utf-8')
+            # Command execution failed
             else:
-                # Command execution failed
                 print("Command execution failed with return code:", return_code)
-                print("Error output:")
-                print(stderr.decode())
+                print("Error output:\n{%s}" % stderr.decode())
+        # Handle any exceptions that occurred during command execution
         except Exception as e:
-            # Handle any exceptions that occurred during command execution
-            print("An error occurred:", str(e))
+            print("An error occurred:\n{%s}" % str(e))
 
         return ""
 
     @staticmethod
-    def run_command_and_output_list_of_lines(command, directory):
+    def run_command_and_output_list_of_lines(command: list, directory):
         output = Utility.run_command(command, directory)
 
         # Split the output into lines and remove empty lines
@@ -65,7 +72,8 @@ class Utility:
 
     @staticmethod
     def get_locked_files():
-        return Utility.run_command_and_output_list_of_lines('git lfs locks')
+        return Utility.run_command_and_output_list_of_lines(['git-lfs', 'lock'],
+                                                            Utility.get_project_root_directory())
 
     @staticmethod
     def is_file_orphaned(relative_file_path):
@@ -78,7 +86,7 @@ class Utility:
             print("Cached LFS tracked files.")
             project_root = Utility.get_project_root_directory()
             Utility.get_git_lfs_tracked_files.tracked_files = Utility.run_command_and_output_list_of_lines(
-                "git-lfs ls-files --name-only", project_root)
+                ['git-lfs', 'ls-files', '--name-only'], project_root)
 
         return Utility.get_git_lfs_tracked_files.tracked_files
 
@@ -108,8 +116,8 @@ class Utility:
     def is_git_config_set():
         try:
             project_root = Utility.get_project_root_directory()
-            config_name = Utility.run_command("git config user.name", project_root)
-            config_mail = Utility.run_command("git config user.email", project_root)
+            config_name = Utility.run_command(['git', 'config', 'user.name'], project_root)
+            config_mail = Utility.run_command(['git', 'config', 'user.email'], project_root)
             if (config_name != '\n' and not len(config_name) == 0) and (
                     config_mail != '\n' and not len(config_mail) == 0):
                 return True
@@ -122,7 +130,8 @@ class Utility:
     def get_git_user():
         if not hasattr(Utility.get_git_user, "git_user"):
             project_root = Utility.get_project_root_directory()
-            Utility.get_git_user.git_user = Utility.run_command('git config user.name', project_root).rstrip("\n")
+            Utility.get_git_user.git_user = Utility.run_command(['git', 'config', 'user.name'], project_root).rstrip(
+                "\n")
 
         return Utility.get_git_user.git_user
 
@@ -160,11 +169,11 @@ class Utility:
                 # Verify executable for Windows
                 if platform == Utility.Platform.Windows:
                     if os.path.isfile(project_root + custom_git_lfs_path + ".exe"):
-                        Utility.get_git_lfs_path.git_lfs_path = custom_git_lfs_path + ".exe"
+                        Utility.get_git_lfs_path.git_lfs_path = os.path.normpath(os.path.join(project_root, custom_git_lfs_path) + ".exe")
                 # Verify executable for Linux
                 elif platform == Utility.Platform.Linux:
                     if os.path.isfile(project_root + custom_git_lfs_path):
-                        Utility.get_git_lfs_path.git_lfs_path = custom_git_lfs_path
+                        Utility.get_git_lfs_path.git_lfs_path = os.path.join(project_root, custom_git_lfs_path)
                 else:
                     raise PlatformError()
             else:
@@ -200,7 +209,7 @@ class Utility:
         platform = Utility.get_platform()
         if platform == Utility.Platform.Windows:
             path.replace("/", "\\")
-        elif platform ==Utility.Platform.Linux:
+        elif platform == Utility.Platform.Linux:
             path.replace("\\", "/")
         else:
             raise PlatformError()

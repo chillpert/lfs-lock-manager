@@ -82,13 +82,7 @@ class LfsLockParser:
         # Get the lines of the output as a list
         project_root = Utility.get_project_root_directory()
 
-        git_lfs_path = Utility.get_git_lfs_path()
-
-        # Use backwards slash on Windows, so we can run in cmd
-        if Utility.get_platform() == Utility.Platform.Windows:
-            git_lfs_path = git_lfs_path.replace("/", "\\")
-
-        command = git_lfs_path + " locks"
+        command = [Utility.get_git_lfs_path(), 'locks']
         lines = Utility.run_command_and_output_list_of_lines(command, project_root)
 
         data = []
