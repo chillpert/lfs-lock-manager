@@ -1,25 +1,43 @@
+"""
+The LFS lock manager is an application which can be used to manage locking and unlocking of files
+using a graphical user interface. It has built-in features which simplify transferring file lock
+ownerships from one person to another.
+"""
+import os
+import sys
+from enum import Enum
+
 import darkdetect
 import qdarktheme
+from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPalette, QColor, QFontDatabase, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, \
-    QComboBox, QStackedWidget, QLabel, QToolBar, QAction, QToolButton, QSizePolicy
+    QComboBox, QStackedWidget, QToolBar, QAction, QToolButton, QSizePolicy
+from PyQt5.QtWidgets import QMenu
 
-import custom_dialogs
-from file_tree_widgets import *
+import pyqt_helpers
+import settings
+import utility
 from lfs_lock_parser import LfsLockParser
 from locking_widgets import UnlockingWidget, LockingWidget
-from utility import *
+from settings import Settings
 
 
 class ApplicationMode(Enum):
-    Unlock = 0
-    Lock = 1
+    """ All modes which the application supports """
+    UNLOCK = 0
+    LOCK = 1
 
     def __str__(self):
-        return self.name + " Mode"
+        return self.name.lower().capitalize() + " Mode"
 
 
 class LfsLockManagerWindow(QMainWindow):
+    # pylint: disable=too-many-instance-attributes
+    """
+    The application's main window.
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -28,15 +46,15 @@ class LfsLockManagerWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
 
         # Set window icon
-        icon = QIcon(Utility.resource_path("resources/icons/lock.ico"))
+        icon = QIcon(utility.resource_path("resources/icons/lock.ico"))
         self.setWindowIcon(icon)
 
         # Set initial theme
         self.is_dark_theme = darkdetect.isDark()
         if self.is_dark_theme:
-            self.set_dark_theme()
+            self._set_dark_theme()
         else:
-            self.set_light_theme()
+            self._set_light_theme()
 
         # Flag for tracking if this window ever received data from the LfsLockParser
         self.has_lock_data = False
@@ -48,10 +66,10 @@ class LfsLockManagerWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Create widget for picking application mode
-        self.application_mode_widget = self.create_application_mode_widget()
+        self.application_mode_widget = self._create_application_mode_widget()
 
         # Create a toolbar
-        self.tool_bar_widget = self.create_tool_bar_widget()
+        self.tool_bar_widget = self._create_tool_bar_widget()
         self.addToolBar(self.tool_bar_widget)
 
         # Create stacked widget for each application mode
@@ -59,27 +77,31 @@ class LfsLockManagerWindow(QMainWindow):
         self.layout.addWidget(self.stacked_widget)
 
         # Add each application mode to the stacked widget
-        self.overlay_widget = OverlayWidget()
+        self.overlay_widget = pyqt_helpers.OverlayWidget()
         self.locking_widget = LockingWidget()
         self.unlocking_widget = UnlockingWidget()
 
         # Cache the project root directory
-        root_directory = Utility.get_project_root_directory()
+        root_directory = utility.get_project_root_directory()
 
         # Set initial message when launching the application
         success_text = "Loading LFS data of " + os.path.basename(root_directory[:-1]) + " ..."
         label_text = success_text
 
         # Possible errors
-        if not Utility.is_project_root_directory_valid():
+        if not utility.is_project_root_directory_valid():
             label_text = "Invalid root directory. Please modify 'settings.ini' accordingly."
-        elif not Utility.is_git_installed():
-            label_text = "Your system does not have Git installed. Please install Git and try again."
-        elif not Utility.is_git_lfs_installed():
-            label_text = "Your system does not have Git LFS installed. Please install Git LFS and try again."
-        elif not Utility.is_git_config_set():
-            label_text = ("Your Git config has not been set properly. Please set 'git config user.name' and 'git "
-                          "config user.email' and try again.")
+        elif not utility.is_git_installed():
+            label_text = ("Your system does not have Git installed. Please install Git and try "
+                          "again.")
+        elif not utility.is_git_lfs_installed():
+            label_text = ("Your system does not have Git LFS installed. Please install Git LFS and"
+                          " try again.")
+        elif not utility.is_git_config_set():
+            label_text = (
+                "Your Git config has not been set properly. Please set 'git config user.name' and "
+                "'git "
+                "config user.email' and try again.")
         else:
             # Trigger async LFS lock parsing only if we made it through all checks
             LfsLockParser.subscribe_to_update(self)
@@ -93,24 +115,25 @@ class LfsLockManagerWindow(QMainWindow):
         self.stacked_widget.addWidget(self.unlocking_widget)
         self.stacked_widget.addWidget(self.overlay_widget)
 
-        # Enter overlay widget by default (to display something while waiting for the LFS data to be parsed)
+        # Enter overlay widget by default (to display something while waiting for the LFS data to
+        # be parsed)
         self.stacked_widget.setCurrentWidget(self.overlay_widget)
 
-    def create_application_mode_widget(self):
+    def _create_application_mode_widget(self):
         # Create combo box widget
         application_mode_widget = QComboBox()
 
         # Add one item for each application mode
-        application_mode_widget.addItem(str(ApplicationMode.Unlock))
-        application_mode_widget.addItem(str(ApplicationMode.Lock))
+        application_mode_widget.addItem(str(ApplicationMode.UNLOCK))
+        application_mode_widget.addItem(str(ApplicationMode.LOCK))
 
         # Set the current index of the combo box
         application_mode_widget.setCurrentIndex(0)
-        application_mode_widget.currentIndexChanged.connect(self.on_application_mode_changed)
+        application_mode_widget.currentIndexChanged.connect(self._on_application_mode_changed)
 
         return application_mode_widget
 
-    def create_tool_bar_widget(self):
+    def _create_tool_bar_widget(self):
         # Create toolbar widget
         tool_bar_widget = QToolBar()
         tool_bar_widget.setFloatable(False)
@@ -124,10 +147,10 @@ class LfsLockManagerWindow(QMainWindow):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         # Create a button to manually trigger the LfsLockParser
-        refresh_icon = QIcon(Utility.resource_path("resources/icons/reload.png"))
+        refresh_icon = QIcon(utility.resource_path("resources/icons/reload.png"))
         refresh_locks_action = QAction("", self)
         refresh_locks_action.setIcon(refresh_icon)
-        refresh_locks_action.triggered.connect(self.on_refresh_locks_pressed)
+        refresh_locks_action.triggered.connect(self._on_refresh_locks_pressed)
         refresh_locks_action.setToolTip("Refresh LFS data")
 
         # Create a help menu
@@ -136,9 +159,9 @@ class LfsLockManagerWindow(QMainWindow):
 
         # Create actions for help menu
         about_action = QAction("About", self)
-        about_action.triggered.connect(self.show_about_dialog)
+        about_action.triggered.connect(self._show_about_dialog)
         tutorial_action = QAction("Tutorial", self)
-        tutorial_action.triggered.connect(self.show_tutorial_dialog)
+        tutorial_action.triggered.connect(self._show_tutorial_dialog)
 
         # Add actions to the help menu
         help_menu.addAction(about_action)
@@ -152,10 +175,10 @@ class LfsLockManagerWindow(QMainWindow):
 
         # Add button for toggling the theme
         toggle_theme_action = QAction("", self)
-        icon = QIcon(Utility.resource_path("resources/icons/theme_toggle.png"))
+        icon = QIcon(utility.resource_path("resources/icons/theme_toggle.png"))
         toggle_theme_action.setIcon(icon)
         toggle_theme_action.setToolTip("Toggle between dark and light theme")
-        toggle_theme_action.triggered.connect(self.on_toggle_theme)
+        toggle_theme_action.triggered.connect(self._on_toggle_theme)
 
         # Populate toolbar
         tool_bar_widget.addWidget(self.application_mode_widget)
@@ -166,17 +189,17 @@ class LfsLockManagerWindow(QMainWindow):
 
         return tool_bar_widget
 
-    def on_refresh_locks_pressed(self):
+    def _on_refresh_locks_pressed(self):
         self.setEnabled(False)
         LfsLockParser.parse_locks_async()
 
-    def on_toggle_theme(self):
+    def _on_toggle_theme(self):
         if self.is_dark_theme:
-            self.set_light_theme()
+            self._set_light_theme()
         else:
-            self.set_dark_theme()
+            self._set_dark_theme()
 
-    def set_light_theme(self):
+    def _set_light_theme(self):
         new_stylesheet = qdarktheme.load_stylesheet("light")
         new_palette = qdarktheme.load_palette("light")
 
@@ -185,44 +208,46 @@ class LfsLockManagerWindow(QMainWindow):
 
         self.is_dark_theme = False
 
-    def set_dark_theme(self):
+    def _set_dark_theme(self):
         new_stylesheet = qdarktheme.load_stylesheet("dark")
         new_palette = qdarktheme.load_palette("dark")
-        new_palette.setColor(QPalette.Link, QColor(29, 212, 250))  # Fix for hyperlinks in dark theme
+        new_palette.setColor(QPalette.Link,
+                             QColor(29, 212, 250))  # Fix for hyperlinks in dark theme
 
         self.setStyleSheet(new_stylesheet)
         self.setPalette(new_palette)
 
         self.is_dark_theme = True
 
-    def show_tutorial_dialog(self):
-        dialog = custom_dialogs.LabelDialog(self, "A tutorial will be added later.", 300, 20)
-        dialog.exec_()
-        pass
+    def _show_tutorial_dialog(self):
+        pyqt_helpers.display_message_window(self, "A tutorial will be added later.", 300, 20)
 
-    def show_about_dialog(self):
-        dialog = custom_dialogs.LabelDialog(self,
-                                            'This application was developed for a video game called Marmortal.<br>If '
-                                            'you like to'
-                                            'play, please visit <a '
-                                            'href="https://www.marmortal.com">https://www.marmortal.com</a>.<br><br'
-                                            '>Thank you for'
-                                            'using this app.<br>Please report bugs on GitHub.', 300, 100)
-        dialog.exec_()
+    def _show_about_dialog(self):
+        message = 'This application was developed for a video game called Marmortal.<br>' \
+                  'If you like to play, please visit ' \
+                  '<a href="https://www.marmortal.com">https://www.marmortal.com</a>.<br><br' \
+                  '>Thank you for using this app.<br>Please report bugs on GitHub.'
+        pyqt_helpers.display_message_window(self, message, 300, 100)
 
-    def on_application_mode_changed(self, mode):
-        self.change_application_mode(mode)
+    def _on_application_mode_changed(self, mode: int):
+        app_mode = ApplicationMode(mode)
+        self._change_application_mode(app_mode)
 
-    def change_application_mode(self, mode):
-        if self.has_lock_data and Utility.is_project_root_directory_valid():
-            if mode == ApplicationMode.Unlock.value:
+    def _change_application_mode(self, mode: ApplicationMode):
+        if self.has_lock_data and utility.is_project_root_directory_valid():
+            if mode == ApplicationMode.UNLOCK:
                 self.stacked_widget.setCurrentWidget(self.unlocking_widget)
-            elif mode == ApplicationMode.Lock.value:
+            elif mode == ApplicationMode.LOCK:
                 self.stacked_widget.setCurrentWidget(self.locking_widget)
 
-        self.application_mode_widget.setCurrentIndex(mode)
+        value = mode.value
+        self.application_mode_widget.setCurrentIndex(value)
 
     def on_lock_data_update(self):
+        """
+        This function gets called by the LFS lock parser once data was parsed and assuming this
+        object subscribed to the parser beforehand.
+        """
         print("LfsLockManagerWindow: Lock data was updated.")
 
         self.setEnabled(True)
@@ -236,40 +261,21 @@ class LfsLockManagerWindow(QMainWindow):
             self.has_lock_data = True
 
             default_mode = Settings.default_mode
-            mode = ApplicationMode[default_mode]
-            self.change_application_mode(mode.value)
-
-
-class OverlayWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        layout = QVBoxLayout()
-
-        # Create a QLabel widget
-        self.label = QLabel()
-
-        # Set the alignment of the text within the QLabel
-        self.label.setAlignment(Qt.AlignCenter)
-
-        # Add the QLabel to the layout
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-
-    def set_label(self, text):
-        self.label.setText(text)
+            mode = ApplicationMode[default_mode.upper()]
+            self._change_application_mode(mode)
 
 
 if __name__ == "__main__":
-    Settings.load_from_file("settings.ini")
+    settings.load_settings()
 
-    print("Project root dir: '%s'" % Utility.get_project_root_directory())
+    print(f"Project root dir: '{utility.get_project_root_directory()}'")
 
     # Create the application instance
     lockManager = QApplication(sys.argv)
 
     # Load the fonts
-    font_id = QFontDatabase.addApplicationFont(Utility.resource_path("resources/fonts/M+1NerdFont-Medium.ttf"))
+    font_id = QFontDatabase.addApplicationFont(
+        utility.resource_path("resources/fonts/M+1NerdFont-Medium.ttf"))
 
     # Check if the fonts were loaded successfully
     if font_id != -1:
