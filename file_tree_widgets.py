@@ -316,9 +316,9 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
     def __init__(self):
         super().__init__()
 
-        self.setColumnCount(4)
+        self.setColumnCount(3)
         self.setColumnWidth(0, 600)
-        self.setHeaderLabels(["Files", "Owner", "Id", "Not Local"])
+        self.setHeaderLabels(["Files", "Owner", "Id"])
 
         self.selected_git_user = ""
 
@@ -366,7 +366,6 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
                     text = part
                     owner = data.lock_owner if show_meta_data else ""
                     lock_id = str(data.lock_id) if show_meta_data else ""
-                    is_local_file = str(not data.is_local_file) if show_meta_data and not data.is_local_file else ""
 
                     if show_meta_data:
                         matched_filter = False
@@ -379,7 +378,7 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
                                 matched_filter = True
 
                         if not requires_filter or (requires_filter and matched_filter):
-                            item = LockDataFileTreeWidgetItem(parent_item, [text, owner, lock_id, is_local_file])
+                            item = LockDataFileTreeWidgetItem(parent_item, [text, owner, lock_id])
                             item.lock_data = data
                             item.is_directory = False
                             item.relative_path = file_path
