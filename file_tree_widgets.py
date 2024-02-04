@@ -70,21 +70,26 @@ class FileTreeWidgetBase(QTreeWidget):
 
         return result
 
-    def set_selected_items(self, items_to_select):
+    def set_selected_items(self, items_to_select: list):
         if len(items_to_select) > 0:
             iterator = QTreeWidgetItemIterator(self)
             while iterator.value():
                 item = iterator.value()
+
+                needs_selection = False
+
+                # For applying selections in unlocking mode
                 if isinstance(item, LockDataFileTreeWidgetItem):
                     needs_selection = (item.lock_data.lock_id in items_to_select or
                                        item.lock_data.relative_path in items_to_select)
-                    if needs_selection:
-                        item.setCheckState(0, Qt.CheckState.Checked)
-                    else:
-                        item.setCheckState(0, Qt.CheckState.Unchecked)
+                # For applying selections in locking mode
+                elif isinstance(item, FileTreeWidgetItem):
+                    needs_selection = (item.relative_path in items_to_select)
+
+                # Update check state
+                item.setCheckState(0, Qt.CheckState.Checked if needs_selection else Qt.CheckState.Unchecked)
 
                 iterator += 1
-            pass
 
     def unselect_all_items(self):
         iterator = QTreeWidgetItemIterator(self)

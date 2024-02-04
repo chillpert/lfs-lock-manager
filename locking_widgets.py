@@ -131,10 +131,13 @@ class LockingWidgetBase(QWidget):
         return apply_selection_from_clipboard_button_widget
 
     def _on_apply_selection_from_clipboard_pressed(self):
+        # @TODO: It does not work in locking mode
         clipboard_string = pyperclip.paste()
         items = clipboard_string.split()
         self.file_tree_widget.set_selected_items(items)
 
+        # @TODO: The number of selected files should be returned from the set_selected_items function since we might
+        #  have unwanted substrings in our clipboard.
         dialog = NotificationDialog("Selected %i items from clipboard" % len(items), 500, 40)
         dialog.run(self.parent())
 

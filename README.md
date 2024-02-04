@@ -4,12 +4,16 @@
 [![Pylint](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml)
 ![](https://shields.io/github/license/chillpert/lfs-lock-manager)
 
-⚠️  This project is still experimental. Use it at your own risk.
+⚠️ This project is still experimental. Use it at your own risk.
 
-This application can help you and your team to manage your LFS file locks, on both Windows and Linux. It is written in Python with PyQt5 and
+This application can help you and your team to manage your LFS file locks, on both Windows and Linux. It is written in
+Python with PyQt5 and
 built using PyInstaller, so you do not need Python to be installed on your system.
 
-The app was specifically made for projects based on Unreal Engine 4/5 in combination with the amazing Git LFS plugin by [ProjectBorealis](https://github.com/ProjectBorealis/UEGitPlugin) (forked from [SRomBauts](https://github.com/SRombauts/UEGitPlugin)). However, it can be used for any other LFS-initialized repository.
+The app was specifically made for projects based on Unreal Engine 4/5 in combination with the amazing Git LFS plugin
+by [ProjectBorealis](https://github.com/ProjectBorealis/UEGitPlugin) (forked
+from [SRomBauts](https://github.com/SRombauts/UEGitPlugin)). However, it can be used for any other LFS-initialized
+repository.
 
 Pull requests are very welcome.
 
@@ -21,7 +25,8 @@ Pull requests are very welcome.
 - Filter and search locks
 - Easily copy and paste locks from other users
 - Force unlocking for admin users
-- Support for custom Git-LFS executables (e.g. [adjusted for multi-threading](https://github.com/ProjectBorealis/UEGitPlugin))
+- Support for custom Git-LFS executables (
+  e.g. [adjusted for multi-threading](https://github.com/ProjectBorealis/UEGitPlugin))
 - Cross-platform (Windows and Linux)
 - Dark mode 😎
 
@@ -41,7 +46,10 @@ updated version of `settings.ini` to `./dist`.
 
 ## GitHub-Actions
 
-There is a GitHub action for downloading the latest release of this repository automatically. This action will skip the download if there is no new version available. The action creates a PR which you can then merge yourself after verifying the changes. Feel free to optimize it for your own workflow. You can find it [here](https://github.com/chillpert/lfs-lock-manager-deploy-demo).
+There is a GitHub action for downloading the latest release of this repository automatically. This action will skip the
+download if there is no new version available. The action creates a PR which you can then merge yourself after verifying
+the changes. Feel free to optimize it for your own workflow. You can find
+it [here](https://github.com/chillpert/lfs-lock-manager-deploy-demo).
 
 ## Credits
 
@@ -53,11 +61,12 @@ There is a GitHub action for downloading the latest release of this repository a
 ## TODO
 
 - [ ] Clean up codebase (I am a beginner with Python)
+- [x] Cannot apply selection from clipboard in locking mode
 - [ ] Reduce overhead for (un)locking operations
 - [ ] Simplify handling of paths
+- [ ] Add user setting for using '/' or '\\' when generating commands (only relevant for custom git-lfs executables)
 - [x] Do not use `shell=True` with subprocess
 - [x] Remove Git Bash for Windows requirement
-- [ ] Use IDs instead of relative paths to be more efficient with command size limitations
 - [ ] Bug: Selection sometimes persists after certain actions
 - [ ] Bug: After force unlocking another user's locks, the app switches to own locks again
 - [ ] Bug: The current selection gets wiped when filtering using a string that does not match anything in the file tree
