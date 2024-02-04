@@ -1,5 +1,6 @@
 import os
 import re
+from functools import partial
 
 import pyperclip
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -91,6 +92,29 @@ class FileTreeWidgetBase(QTreeWidget):
             item = iterator.value()
             item.setCheckState(0, Qt.CheckState.Unchecked)
 
+    def get_selected_file_paths(self):
+        result = []
+
+        iterator = QTreeWidgetItemIterator(self)
+        while iterator.value():
+            item = iterator.value()
+            if not item.is_directory and item.checkState(0) == Qt.CheckState.Checked:
+                result.append(item.relative_path)
+
+            iterator += 1
+
+        return result
+
+    def copy_relative_file_path_of_tree_selection(self):
+        selected_files = self.get_selected_file_paths()
+        string_to_copy = " ".join(selected_files)
+
+        if string_to_copy != "":
+            pyperclip.copy(string_to_copy.strip())
+            self.notify_copy_transaction(len(selected_files))
+
+        return string_to_copy
+
     def has_non_directory_child(self, item):
         # Check if the item has any children
         if item.childCount() > 0:
@@ -162,6 +186,23 @@ class FileTreeWidgetBase(QTreeWidget):
                 for i in range(item.childCount()):
                     child_item = item.child(i)
                     stack.append((child_item, current_depth + 1))
+
+    def request_locking_operation(self, should_lock: bool):
+        selected_items = self.get_selected_file_paths()
+
+        # @TODO: How should we deal with slashes here? In Git Bash we must use forward slashes to run a custom LFS
+        #  executable. However, in CMD we need backward slash.
+        git_lfs_command = os.path.relpath(Utility.get_git_lfs_path(), Utility.get_project_root_directory())
+        git_lfs_command = git_lfs_command.replace('\\', '/')
+
+        git_lfs_operation_type = " lock " if should_lock is True else " unlock "
+        command_to_copy = git_lfs_command + git_lfs_operation_type + " ".join(selected_items)
+
+        pyperclip.copy(command_to_copy)
+        self.notify_copy_transaction(len(selected_items))
+
+        dialog = NotificationDialog("Copied unlocking command for %i files to clipboard" % len(selected_items), 500, 40)
+        dialog.run(self.parent())
 
 
 class LockingFileTreeWidget(FileTreeWidgetBase):
@@ -247,19 +288,6 @@ class LockingFileTreeWidget(FileTreeWidgetBase):
 
                 path_so_far += "/"
 
-    def get_selected_file_paths(self):
-        result = []
-
-        iterator = QTreeWidgetItemIterator(self)
-        while iterator.value():
-            item = iterator.value()
-            if not item.is_directory and item.checkState(0) == Qt.CheckState.Checked:
-                result.append(item.relative_path)
-
-            iterator += 1
-
-        return result
-
     def contextMenuEvent(self, event):
         item = self.currentItem()
         if item is not None:
@@ -278,23 +306,10 @@ class LockingFileTreeWidget(FileTreeWidgetBase):
             copy_relative_file_path_action = menu.addAction("Copy relative file path")
             copy_relative_file_path_action.triggered.connect(self.copy_relative_file_path_of_tree_selection)
 
+            request_unlock_action = menu.addAction("Copy locking command")
+            request_unlock_action.triggered.connect(partial(self.request_locking_operation, True))
+
             action = menu.exec_(self.mapToGlobal(event.pos()))
-
-    def copy_relative_file_path_of_tree_selection(self):
-        string_to_copy = ""
-
-        selected_files = self.get_selected_file_paths()
-        if len(selected_files) > 0:
-            for file in selected_files:
-                string_to_copy += " " + file
-        else:
-            item = self.currentItem()
-            if not item.is_directory:
-                string_to_copy = item.relative_path
-
-        if string_to_copy != "":
-            pyperclip.copy(string_to_copy)
-            self.notify_copy_transaction(len(selected_files))
 
 
 class UnlockingFileTreeWidget(FileTreeWidgetBase):
@@ -448,30 +463,13 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
                 copy_relative_file_path_action = menu.addAction("Copy relative file path")
                 copy_relative_file_path_action.triggered.connect(self.copy_relative_file_path_of_tree_selection)
 
-                # @NOTE: Does the same as above but added for better clarity
-                if self.selected_git_user != Utility.get_git_user():
-                    request_unlock_action = menu.addAction("Request unlock")
-                    request_unlock_action.triggered.connect(self.copy_relative_file_path_of_tree_selection)
+                request_unlock_action = menu.addAction("Copy unlocking command")
+                request_unlock_action.triggered.connect(partial(self.request_locking_operation, False))
+
+                request_lock_action = menu.addAction("Copy locking command")
+                request_lock_action.triggered.connect(partial(self.request_locking_operation, True))
 
             action = menu.exec_(self.mapToGlobal(event.pos()))
-
-    def copy_relative_file_path_of_tree_selection(self):
-        string_to_copy = ""
-
-        selected_files = self.get_selected_file_paths()
-        if len(selected_files) > 0:
-            for file in selected_files:
-                string_to_copy += " " + file
-        else:
-            item = self.currentItem()
-            if not item.is_directory:
-                string_to_copy = item.lock_data.relative_path
-
-        if string_to_copy != "":
-            pyperclip.copy(string_to_copy)
-            self.notify_copy_transaction(len(selected_files))
-
-        return string_to_copy
 
     def copy_lock_id_of_tree_selection(self):
         string_to_copy = ""
