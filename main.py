@@ -9,10 +9,11 @@ from enum import Enum
 
 import darkdetect
 import qdarktheme
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPalette, QColor, QFontDatabase, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, \
-    QComboBox, QStackedWidget, QToolBar, QAction, QToolButton, QSizePolicy
+    QComboBox, QStackedWidget, QToolBar, QAction, QToolButton, QSizePolicy, QLabel
 from PyQt5.QtWidgets import QMenu
 
 import pyqt_helpers
@@ -142,9 +143,21 @@ class LfsLockManagerWindow(QMainWindow):
         # Disable the toolbar widget by default
         tool_bar_widget.setEnabled(False)
 
+        branch_name_widget = QLabel(utility.get_git_branch().strip())
+        branch_name_widget.setAlignment(Qt.AlignCenter)
+        branch_name_widget.setWindowFlags(Qt.FramelessWindowHint)
+        branch_name_widget.setAttribute(Qt.WA_TranslucentBackground)
+
         # Create a spacer for keeping all other buttons on the far right
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        left_spacer = QWidget()
+        left_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        left_spacer.setWindowFlags(Qt.FramelessWindowHint)
+        left_spacer.setAttribute(Qt.WA_TranslucentBackground)
+
+        right_spacer = QWidget()
+        right_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        right_spacer.setWindowFlags(Qt.FramelessWindowHint)
+        right_spacer.setAttribute(Qt.WA_TranslucentBackground)
 
         # Create a button to manually trigger the LfsLockParser
         refresh_icon = QIcon(utility.resource_path("resources/icons/reload.png"))
@@ -182,7 +195,9 @@ class LfsLockManagerWindow(QMainWindow):
 
         # Populate toolbar
         tool_bar_widget.addWidget(self.application_mode_widget)
-        tool_bar_widget.addWidget(spacer)
+        tool_bar_widget.addWidget(left_spacer)
+        tool_bar_widget.addWidget(branch_name_widget)
+        tool_bar_widget.addWidget(right_spacer)
         tool_bar_widget.addAction(refresh_locks_action)
         tool_bar_widget.addWidget(help_button)
         tool_bar_widget.addAction(toggle_theme_action)
@@ -226,7 +241,8 @@ class LfsLockManagerWindow(QMainWindow):
         message = 'This application was developed for a video game called Marmortal.<br>' \
                   'If you like to play, please visit ' \
                   '<a href="https://www.marmortal.com">https://www.marmortal.com</a>.<br><br' \
-                  '>Thank you for using this app.<br>Please report bugs on GitHub.'
+                  '>Thank you for using this app.<br>Please report bugs on ' \
+                  '<a href="https://github.com/chillpert/lfs-lock-manager">GitHub</a>.'
         pyqt_helpers.display_message_window(self, message, 300, 100)
 
     def _on_application_mode_changed(self, mode: int):

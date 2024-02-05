@@ -185,6 +185,14 @@ def get_git_user():
     return get_git_user.git_user
 
 
+def get_git_branch():
+    """
+    This function retrieves the currently checked-out Git branch.
+    :return: The checked-out branch
+    """
+    return run_command(['git', 'branch', '--show-current'], get_project_root_directory())
+
+
 def is_git_user_admin():
     """
     This function checks if the Git user on this machine is listed as an admin user in the user
