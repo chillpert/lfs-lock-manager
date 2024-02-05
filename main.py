@@ -139,6 +139,7 @@ class LfsLockManagerWindow(QMainWindow):
         tool_bar_widget = QToolBar()
         tool_bar_widget.setFloatable(False)
         tool_bar_widget.setMovable(False)
+        tool_bar_widget.setContextMenuPolicy(Qt.PreventContextMenu)
 
         # Disable the toolbar widget by default
         tool_bar_widget.setEnabled(False)
