@@ -28,8 +28,7 @@ Pull requests are very welcome.
 - Filter and search locks
 - Easily copy and paste locks from other users
 - Force unlocking for admin users
-- Support for custom Git-LFS executables (
-  e.g. [adjusted for multi-threading](https://github.com/ProjectBorealis/UEGitPlugin))
+- Support for custom Git-LFS executables (e.g. [adjusted for multi-threading](https://github.com/ProjectBorealis/UEGitPlugin))
 - Cross-platform (Windows and Linux)
 - Dark mode 😎
 
@@ -41,8 +40,6 @@ Pull requests are very welcome.
 3. Ensure that `settings.ini` is in the same directory as the executable
 4. Configure `settings.ini` (at the very least, you need to modify `projectRootDirectory`)
 
-On Windows, you currently still need GitBash for Windows which usually ships with Git.
-
 ## Build yourself
 
 Run `pyinstaller LfsLockManager.spec` to create your executable. By default, it will be placed
@@ -51,11 +48,7 @@ updated version of `settings.ini` to `./dist`.
 
 ## GitHub-Actions
 
-There is a GitHub action for downloading the latest release of this repository automatically. This
-action will skip the
-download if there is no new version available. The action creates a PR which you can then merge
-yourself after verifying
-the changes. Feel free to optimize it for your own workflow. You can find
+There is a GitHub action for downloading the latest release of this repository automatically. The action creates a PR which you can then merge yourself after verifying the changes. Feel free to optimize it for your own workflow. You can find
 it [here](https://github.com/chillpert/lfs-lock-manager-deploy-demo).
 
 ## Credits
