@@ -489,12 +489,12 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
                         item.is_directory = True
                         item.relative_path = path_so_far
 
-                    if show_meta_data and not data.is_local_file:
-                        item.setToolTip(0, "Warning: File does not exist locally")
-
                     if isinstance(item, QTreeWidgetItem):
                         item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                         item.setCheckState(0, Qt.Unchecked)
+
+                        if show_meta_data and not data.is_local_file:
+                            item.setToolTip(0, "Warning: File does not exist locally")
 
                         if item.relative_path in [selected_item.relative_path for selected_item in
                                                   self.current_selection]:
