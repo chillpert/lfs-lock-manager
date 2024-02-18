@@ -14,8 +14,8 @@ from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterato
 
 import lfs_lock_parser
 import pyqt_helpers
-from settings import Settings
 import utility
+from settings import Settings
 
 
 class FileTreeWidgetItem(QTreeWidgetItem):
@@ -401,9 +401,9 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
     def __init__(self):
         super().__init__()
 
-        self.setColumnCount(3)
+        self.setColumnCount(4)
         self.setColumnWidth(0, 600)
-        self.setHeaderLabels(["Files", "Owner", "Id"])
+        self.setHeaderLabels(["Files", "Owner", "Id", "Diff"])
 
         self.selected_git_user = ""
 
@@ -472,7 +472,11 @@ class UnlockingFileTreeWidget(FileTreeWidgetBase):
                                 matched_filter = True
 
                         if not requires_filter or (requires_filter and matched_filter):
-                            item = LockDataFileTreeWidgetItem(parent_item, [text, owner, lock_id])
+                            is_file_newer = "Unmodified" if not data.is_file_newer else ""
+                            item = LockDataFileTreeWidgetItem(
+                                parent_item,
+                                [text, owner, lock_id, is_file_newer]
+                            )
                             item.lock_data = data
                             item.is_directory = False
                             item.relative_path = file_path

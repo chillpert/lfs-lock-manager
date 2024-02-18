@@ -15,6 +15,7 @@ class Settings:
     custom_git_lfs_path = ""
     default_mode = "Unlock"
     lock_mode_file_filter = ""
+    tracking_branch = "main"
 
 
 def load_settings():
@@ -39,3 +40,4 @@ def load_settings():
     Settings.custom_git_lfs_path = config.get('Settings', 'customGitLfsExecutable')
     Settings.default_mode = config.get('Settings', 'defaultMode')
     Settings.lock_mode_file_filter = config.get('Settings', 'lockModeFileFilter')
+    Settings.tracking_branch = config.get('Settings', 'trackingBranch')

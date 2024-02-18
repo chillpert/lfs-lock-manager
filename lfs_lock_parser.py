@@ -1,6 +1,6 @@
 """ This module implements a parser for Git LFS lock data and related types. """
-import os
 import dataclasses
+import os
 
 import utility
 from worker_thread import WorkerThread
@@ -18,6 +18,8 @@ class LfsLockData:
     is_orphaned: bool
     # True, if file exists locally
     is_local_file: bool
+    # True, if file is modified or was updated (via commit)
+    is_file_newer: bool
 
 
 class LfsLockParser:
@@ -137,7 +139,9 @@ class LfsLockParser:
             # if is_orphaned:
             #     print("File '%s' is orphaned." % file_path)
 
-            data.append(LfsLockData(lock_id, lock_owner, file_path, is_orphaned, is_local_file))
+            is_file_newer = utility.is_file_newer(file_path)
+            data.append(LfsLockData(
+                lock_id, lock_owner, file_path, is_orphaned, is_local_file, is_file_newer))
 
         # Keep a copy of the parsed data
         LfsLockParser.lock_data = data

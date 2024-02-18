@@ -36,6 +36,9 @@ def run_command(command: list, cwd: str, print_output=False):
     :param print_output: Optionally prints the command's output if successful for debugging purposes
     :return: Returns the command's output if successful, otherwise an empty string
     """
+    # if not hasattr(run_command, "opened_subprocess"):
+    #     run_command.opened_subprocess = False
+
     # If not root directory was specified, we will default to the Git project's root
     if cwd == "":
         cwd = get_project_root_directory()
@@ -201,6 +204,37 @@ def is_git_user_admin():
     """
     git_user = get_git_user()
     if git_user in Settings.git_admin_users:
+        return True
+
+    return False
+
+
+def is_file_newer(relative_path: str):
+    """
+    Checks if the file at the given relative path is modified or newer compared to the main branch
+    :return: Returns true, if file is newer
+    """
+    # Check if file exists
+    project_root = get_project_root_directory()
+    if not os.path.isfile(os.path.join(project_root, relative_path)):
+        return ""
+
+    # Check if branch exists
+    git_check_branch_cmd = ['git', 'branch', '--list', Settings.tracking_branch]
+    output = run_command(git_check_branch_cmd, project_root)
+    if output == "":
+        return False
+
+    # Check if file was modified
+    git_status_cmd = ['git', 'status', '--porcelain', relative_path]
+    output = run_command(git_status_cmd, project_root)
+    if output != "":
+        return True
+
+    # Check if file newer version
+    git_diff_cmd = ['git', 'diff', '--name-status', Settings.tracking_branch, '--', relative_path]
+    output = run_command(git_diff_cmd, project_root)
+    if output != "":
         return True
 
     return False
