@@ -4,8 +4,6 @@
 [![Pylint](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml/badge.svg)](https://github.com/chillpert/lfs-lock-manager/actions/workflows/pylint.yml)
 ![](https://shields.io/github/license/chillpert/lfs-lock-manager)
 
-⚠️ This project is still experimental. Use it at your own risk.
-
 This application can help you and your team to manage your LFS file locks, on both Windows and
 Linux. It is written in
 Python with PyQt5 and
