@@ -12,7 +12,7 @@ built using PyInstaller, so you do not need Python to be installed on your syste
 The app was specifically made for projects based on Unreal Engine 4/5 in combination with the
 amazing Git LFS plugin
 by [ProjectBorealis](https://github.com/ProjectBorealis/UEGitPlugin) (forked
-from [SRomBauts](https://github.com/SRombauts/UEGitPlugin)). However, it can be used for any other
+from [SRombauts](https://github.com/SRombauts/UEGitPlugin)). However, it can be used for any other
 LFS-initialized
 repository.
 
