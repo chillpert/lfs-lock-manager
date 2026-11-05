@@ -84,7 +84,7 @@ class LfsLockParser:
 
     @staticmethod
     def _on_parsing_failed(error):
-        print("LFS lock parser failed: " + error)
+        print("LFS lock parser failed: " + str(error))
 
     @staticmethod
     def _notify_subscribers():
@@ -122,7 +122,11 @@ class LfsLockParser:
 
         for line in lines:
             # Split the data string into components
-            components = line.split()
+            # Split from the right: owner and ID never contain spaces, but file paths can
+            components = line.rsplit(None, 2)
+            if len(components) != 3 or not components[2].startswith("ID:"):
+                print(f"Skipping unrecognized lock line: {line}")
+                continue
 
             # Extract the relevant information
             file_path = components[0]
