@@ -68,8 +68,7 @@ def run_command(command: list, cwd: str, print_output=False):
             print("Error output:\n{%s}" % stderr.decode())
 
     # Handle any exceptions that occurred during command execution
-    # pylint: disable=broad-exception-caught
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         print("An error occurred:\n{%s}" % str(e))
 
     return ""

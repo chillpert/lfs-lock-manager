@@ -288,7 +288,7 @@ if __name__ == "__main__":
     print(f"Project root dir: '{utility.get_project_root_directory()}'")
 
     # Create the application instance
-    lockManager = QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     # Load the fonts
     font_id = QFontDatabase.addApplicationFont(
@@ -301,7 +301,7 @@ if __name__ == "__main__":
             # Set the fonts as the default application fonts
             default_font = QFont(font_families[0])
             default_font.setPointSize(10)
-            lockManager.setFont(default_font)
+            app.setFont(default_font)
 
     # Create the main window
     window = LfsLockManagerWindow()
@@ -310,4 +310,4 @@ if __name__ == "__main__":
     window.show()
 
     # Run the event loop
-    sys.exit(lockManager.exec_())
+    sys.exit(app.exec_())
